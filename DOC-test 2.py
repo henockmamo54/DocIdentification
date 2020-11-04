@@ -9,7 +9,7 @@ import numpy as np
 import cv2  
 
  
-frame = cv2.imread('ct2.png')
+frame = cv2.imread('TestImages/ct2.png')
 # width=frame.size[0]
 
 # Convert BGR to HSV
