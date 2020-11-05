@@ -920,3 +920,7 @@ OriginalPdfFiles_Translated/Missing_signature/1 (78).jpg
 OriginalPdfFiles_Translated/Missing_signature/1 (77).pdf
 OriginalPdfFiles_Translated/Missing_signature/1 (77).jpg
 *.pdf
+*.jpg
+*.png
+top_model_weights_path.data-00000-of-00001
+topmodel/variables/variables.data-00000-of-00001
