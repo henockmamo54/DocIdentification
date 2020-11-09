@@ -1,0 +1,2 @@
+model_checkpoint_path: "top_model_weights_path"
+all_model_checkpoint_paths: "top_model_weights_path"
