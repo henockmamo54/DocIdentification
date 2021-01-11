@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 11 14:25:46 2021
+Created on Mon Jan 11 19:42:09 2021
 
 @author: Henock
-"""
-  
+""" 
 
 import cv2  
 import re
@@ -23,7 +22,7 @@ from os import walk
      
 
 # frame = cv2.imread('TestImages/ct2.png') 
-frame = cv2.imread('tempimage1/1 (5).jpg') 
+frame = cv2.imread('tempimage/1 (19).jpg') 
 # frame = cv2.imread('tempimage/'+file) 
 
 # frame=cv2.imread("sample.jpg")
@@ -125,7 +124,7 @@ for i in range(len(lines)-1):
     #clean up
     temptext=(temptext.replace("대결","").replace("전결","").replace("/","")
               .replace(".","").replace("결","").replace("전","")
-              .replace("팀" ,"").replace("장",""))   
+              .replace("팀" ,"")) 
     
      
     diff=(int(nextBox[1]) - int(currentBox[3])) 
@@ -152,7 +151,7 @@ img = cv2.rectangle(crop_img,
                         # (LocationList[_indexOfBC][0] -padding, LocationList[_indexOfBC][1]+ padding), 
                         (LocationList[_indexOfBC][0]  ,     LocationList[_indexOfBC][1] +50 ),
                         (LocationList[_indexOfBC][0]  + w,  LocationList[_indexOfBC][1] +50 ),
-                        (120, 255, 0), 5)
+                        (0, 255, 0), 5)
 
 
 boxandtext= pd.DataFrame(LocationList,columns=["x1","y1","x2","y2"])
@@ -198,64 +197,72 @@ cv2.imwrite('testcrop_img.png',crop_img)
  
 
 indexes=list(np.arange(boxandtext2.shape[0]))
-boxandtext2=boxandtext2.sort_values(by="y1").reset_index(drop=True)
+boxandtext2=boxandtext2.sort_values(by=["x1","y1"]).reset_index(drop=True)
 
-for j in range(boxandtext2.shape[0]):
+if(boxandtext2.shape[0]%2 !=0):
+    print(" ---------------------- Not Normal ---------------------- ")
+else:
     
-    print(j,"--------- j ",indexes)
+    for j in range(boxandtext2.shape[0]):
         
-    if (j in indexes):        
-        
-        distances=[] 
-        temp_dist_index=[]
-        
-        # for i in range(boxandtext2.shape[0]):
-        for i in indexes:
-            a=(boxandtext2.x2[j], boxandtext2.y1[j])
-            b=(boxandtext2.x1[i], boxandtext2.y1[i])            
+        print(j,"--------- j ",indexes)
             
+        if (j in indexes):        
             
-            if(i==j):
-                distances.append(pow(10, 7))
-            else :
-                distances.append(distance.euclidean(a, b))
+            distances=[] 
+            temp_dist_index=[]
+            
+            # for i in range(boxandtext2.shape[0]):
+            for i in indexes:
+                a=(boxandtext2.x2[j], boxandtext2.y1[j])
+                b=(boxandtext2.x1[i], boxandtext2.y1[i])            
                 
-            temp_dist_index.append(i)
-            print(i,j," ",boxandtext2.text[i],distance.euclidean(a, b),distances,i==j)
-        
-        
-        closest=temp_dist_index[np.argmin(distances)]        
-        print("closest",closest)  
-        
-        # limit distance check        
-        horizontaldist= abs(boxandtext2.x1[closest] - boxandtext2.x2[j])
-        print("horizontaldist  ==> ",abs(horizontaldist),horizontaldist<450)
-        
-        if(horizontaldist<450 ):
+                
+                if(i==j):
+                    distances.append(pow(10, 7))
+                else :
+                    distances.append(distance.euclidean(a, b))
+                    
+                temp_dist_index.append(i)
+                print(i,j," ",boxandtext2.text[i],distance.euclidean(a, b),distances,i==j)
             
             
-            crop_img2=cv2.line(crop_img,
-                      (boxandtext2.x2[j], boxandtext2.y1[j]),
-                      (boxandtext2.x1[closest], boxandtext2.y1[closest]),
-                     
-                      (120, 255, 0), 30)
+            closest=temp_dist_index[np.argmin(distances)]        
+            print("closest",closest)  
             
-            # resize image
-            crop_img2 = cv2.resize(crop_img, dim, interpolation = cv2.INTER_AREA) 
+            # limit distance check        
+            horizontaldist= abs(boxandtext2.x1[closest] - boxandtext2.x2[j])
+            print("horizontaldist  ==> ",abs(horizontaldist),horizontaldist<450)
             
-            # show annotated image and wait for keypress
-            cv2.imshow("crop_img2", crop_img2)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows() 
-             
+            if(horizontaldist<450  ):
+                
+                
+                crop_img2=cv2.arrowedLine(crop_img,
+                          (boxandtext2.x2[j], boxandtext2.y1[j]),
+                          (boxandtext2.x1[closest], boxandtext2.y1[closest]),
+                         
+                          (120, 255, 120), 10)
+                
+                # resize image
+                crop_img2 = cv2.resize(crop_img, dim, interpolation = cv2.INTER_AREA) 
+                
+                # # show annotated image and wait for keypress
+                # cv2.imshow("crop_img2", crop_img2)
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows() 
+                 
+    
+    
+                indexes.remove(j)
+                indexes.remove(closest)
+                 
+                print(indexes, " removed ", j, closest)
 
-
-            indexes.remove(j)
-            indexes.remove(closest)
-             
-            print(indexes, " removed ", j, closest)
-
-
+if(len(indexes) !=0):
+    print(" ---------------------- Not Normal ---------------------- ")
+else:
+    print(" ********************** Normal ********************** ")
+    
 # resize image
 crop_img2 = cv2.resize(crop_img, dim, interpolation = cv2.INTER_AREA) 
 
