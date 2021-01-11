@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan  8 22:21:07 2021
+Created on Sat Jan  9 14:01:16 2021
 
 @author: Henock
 """
-
-
+ 
 import cv2  
 import re
 import imutils
@@ -82,40 +81,38 @@ boxes =pytesseract.image_to_boxes(crop_img, lang = 'kor', config=custom_config)
 h, w= crop_img.shape
 
 
-lines=boxes.splitlines()
-tempp=lines[0].split(' ')
-tempn=lines[0].split(' ')
+lines=boxes.splitlines() 
 
 
-b=lines[0].split(' ')
-n=lines[1].split(' ')
+previousBox=lines[0].split(' ')
+nextBox=lines[1].split(' ')
     
 
-padding=0
+padding=10
 
-for i in range(len(lines)-1):   
+temptext=""
+
+for i in range(len(lines)-130):   
     
     
-    c=lines[i].split(' ')
-    n=lines[i+1].split(' ')
-    
-    
-    # if(int(b[3])-int(tempp[1])<30):
-    #     tempp=lines[i].split(' ')
-    diff=abs(int(c[3])-int(n[1]))
-    print(c[3],n[1],diff )
-    print(i,diff,c,n)
-    
-    
-    if( (diff>50 )  and (diff < 0.9*w)  ):  #or (abs(int(c[4])-int(n[2])) > 100)
-        print("************* draw", diff, (int(b[1]), int(b[2])), (int(c[3]), int(c[4])),)
+    currentBox=lines[i].split(' ')
+    nextBox=lines[i+1].split(' ')
+    temptext+=currentBox[0]
+     
+    diff=(int(nextBox[1]) - int(currentBox[3])) 
+    # print(i,diff,currentBox,nextBox)
+     
+    if( ( abs(diff)>50   ) and( (abs(diff) < 0.9*w)) ):  #or (abs(int(c[4])-int(n[2])) > 100)
+        # print("************* draw ",temptext, diff, (int(b[1]), int(b[2])), (int(c[3]), int(c[4])),)
         img = cv2.rectangle(crop_img, 
-                        (int(b[1]) -padding, h-int(b[2])+ padding), 
-                        (int(c[3]) + padding, h-int(c[4]) - padding),
+                        (int(previousBox[1]) -padding, h-int(previousBox[2])+ padding), 
+                        (int(currentBox[3]) + padding, h-int(currentBox[4]) - padding),
                         (120, 255, 0), 5)
         tempp=lines[i].split(' ')
         
-        b=n
+        previousBox=nextBox
+        temptext=""
+         
         
 
 width = int(w * 3*scale_percent )

@@ -1,21 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan  8 22:21:07 2021
+Created on Sat Jan  9 16:08:54 2021
 
 @author: Henock
 """
 
 
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jan  9 15:40:49 2021
+
+@author: Henock
+"""
+ 
+ 
 import cv2  
 import re
 import imutils
 import numpy as np
+import pandas as pd
 import pytesseract  
 from matplotlib import pyplot as plt
 
  
 # frame = cv2.imread('TestImages/ct2.png') 
-frame = cv2.imread('../TrainTestData/Train/Normal/1 (1).jpg')  
+frame = cv2.imread('../TrainTestData/Train/Normal/1 (13).jpg')  
 # frame=cv2.imread("sample.jpg")
 frame_original=frame 
 
@@ -77,45 +86,67 @@ custom_config = r'--oem 3 --psm 6  ' #-ctessedit_char_blacklist= 0123456789
 # chekc the text next to stamp
 text = pytesseract.image_to_string(crop_img, lang = 'kor', config=custom_config).strip() 
 boxes =pytesseract.image_to_boxes(crop_img, lang = 'kor', config=custom_config) 
+details = pd.DataFrame(pytesseract.image_to_data(crop_img, output_type=pytesseract.Output.DICT, config=custom_config, lang="kor"))
+details=details[details.conf.astype("int")>30].reset_index()
 
 # h, w, _ = crop_img.shape
 h, w= crop_img.shape
 
 
-lines=boxes.splitlines()
-tempp=lines[0].split(' ')
-tempn=lines[0].split(' ')
+# lines=boxes.splitlines() 
+# previousBox=lines[0].split(' ')
+# nextBox=lines[1].split(' ')
 
 
-b=lines[0].split(' ')
-n=lines[1].split(' ')
+previousBox=0
+nextBox=1
+
+
     
 
-padding=0
+padding=10
+temptext=""
 
-for i in range(len(lines)-1):   
+
+TextList=[]
+LocationList=[]
+
+# for i in range(len(lines)-1):   
+for i in range(details.shape[0]-1):   
     
     
-    c=lines[i].split(' ')
-    n=lines[i+1].split(' ')
+    # currentBox=lines[i].split(' ')
+    # nextBox=lines[i+1].split(' ')
     
     
-    # if(int(b[3])-int(tempp[1])<30):
-    #     tempp=lines[i].split(' ')
-    diff=abs(int(c[3])-int(n[1]))
-    print(c[3],n[1],diff )
-    print(i,diff,c,n)
+    currentBox=i
+    nextBox=i+1
     
+    temptext+=details["text"][currentBox].strip()
     
-    if( (diff>50 )  and (diff < 0.9*w)  ):  #or (abs(int(c[4])-int(n[2])) > 100)
-        print("************* draw", diff, (int(b[1]), int(b[2])), (int(c[3]), int(c[4])),)
-        img = cv2.rectangle(crop_img, 
-                        (int(b[1]) -padding, h-int(b[2])+ padding), 
-                        (int(c[3]) + padding, h-int(c[4]) - padding),
+    if('협조자' in temptext):
+        print(i,"-------****-------------------***")
+     
+    # diff=(int(nextBox[1]) - int(currentBox[3])) 
+    diff=(int(details["left"][nextBox]) - (int(details["left"][currentBox] + int(details["width"][currentBox])))) 
+     
+    if( ( abs(diff)>50   ) and( (abs(diff) < 0.9*w)) ):  
+        img = cv2.rectangle(crop_img,
+                            (details["left"][previousBox], details["top"][previousBox]),
+                            ( (details["left"][currentBox]+details["width"][currentBox]), 
+                             (details["top"][currentBox] + details["height"][currentBox])),                   
                         (120, 255, 0), 5)
-        tempp=lines[i].split(' ')
+                
         
-        b=n
+        LocationList.append( (details["left"][previousBox], details["top"][previousBox], 
+                            details["left"][currentBox]+details["width"][currentBox], 
+                             details["top"][currentBox] + details["height"][currentBox])
+                            )
+        TextList.append(temptext)
+         
+        previousBox=nextBox
+        temptext=""
+         
         
 
 width = int(w * 3*scale_percent )
@@ -128,6 +159,10 @@ crop_img2 = cv2.resize(crop_img, dim, interpolation = cv2.INTER_AREA)
 cv2.imshow("crop_img2", crop_img2)
 cv2.waitKey(0)
 cv2.destroyAllWindows() 
+
+
+
+
 
 
 
