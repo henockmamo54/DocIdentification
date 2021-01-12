@@ -11,7 +11,7 @@ import pytesseract
 import pandas as pd
 import re
 
-image = cv2.imread('image/notnormal/1 (4).jpg')  
+image = cv2.imread('image/normal/1 (1).jpg')  
 frame_original=image  
  
 scale_percent = 500/image.shape[0] # percent of original size
