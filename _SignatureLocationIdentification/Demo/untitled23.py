@@ -22,7 +22,7 @@ from os import walk
      
 
 # frame = cv2.imread('TestImages/ct2.png') 
-frame = cv2.imread('tempimage/1 (19).jpg') 
+frame = cv2.imread('image/normal/1 (9).jpg') 
 # frame = cv2.imread('tempimage/'+file) 
 
 # frame=cv2.imread("sample.jpg")
@@ -124,7 +124,7 @@ for i in range(len(lines)-1):
     #clean up
     temptext=(temptext.replace("대결","").replace("전결","").replace("/","")
               .replace(".","").replace("결","").replace("전","")
-              .replace("팀" ,"")) 
+              .replace("팀" ,"").replace("저거" ,"").replace("골","")  )
     
      
     diff=(int(nextBox[1]) - int(currentBox[3])) 
@@ -132,9 +132,11 @@ for i in range(len(lines)-1):
     if( ( abs(diff)>50   ) and( (abs(diff) < 0.9*w)) ):  
         
         # locate the benchmark text
-        if('협조자' in temptext.strip()):
+        if(('협조자' in temptext.strip())  or ('협소자' in temptext.strip())
+           or ('현조자' in temptext.strip()) ):
             _indexOfBC=len(TextList)
-            temptext=temptext.replace('협조자',"").strip()  
+            temptext=(temptext.replace('협조자',"")
+                      .replace('협소자',"").replace('현조자',"").strip()  )
             print(i,"-------****-------------------***")
             
         
@@ -232,9 +234,10 @@ else:
             
             # limit distance check        
             horizontaldist= abs(boxandtext2.x1[closest] - boxandtext2.x2[j])
+            verticaldist= abs (boxandtext2.y2[closest] - boxandtext2.y1[j])
             print("horizontaldist  ==> ",abs(horizontaldist),horizontaldist<450)
             
-            if(horizontaldist<450  ):
+            if(horizontaldist<450 and verticaldist < 130  ):
                 
                 
                 crop_img2=cv2.arrowedLine(crop_img,
