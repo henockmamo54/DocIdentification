@@ -22,7 +22,7 @@ from os import walk
      
 
 # frame = cv2.imread('TestImages/ct2.png') 
-frame = cv2.imread('image/normal/1 (27).jpg') 
+frame = cv2.imread('image/normal/1 (9).jpg') 
 # frame = cv2.imread('tempimage/'+file) 
 
 # frame=cv2.imread("sample.jpg")
@@ -122,25 +122,21 @@ for i in range(len(lines)-1):
     temptext+=''.join([i for i in currentBox[0].strip() if not i.isdigit()])
     
     #clean up
-    temptext=(temptext.replace("대결","").replace("전결","").replace("/","").replace("_","")
-              .replace(".","").replace("결","").replace("전","").replace("-","")
+    temptext=(temptext.replace("대결","").replace("전결","").replace("/","")
+              .replace(".","").replace("결","").replace("전","")
               .replace("팀" ,"").replace("저거" ,"").replace("골","")  )
     
      
     diff=(int(nextBox[1]) - int(currentBox[3])) 
      
-    if( ( abs(diff)>50   ) and( (abs(diff) < 0.9*w)) and 
-       (nextBox[1]>currentBox[3] or nextBox[3] < currentBox[1])
-       ):  
+    if( ( abs(diff)>50   ) and( (abs(diff) < 0.9*w)) ):  
         
         # locate the benchmark text
         if(('협조자' in temptext.strip())  or ('협소자' in temptext.strip())
-           or ('현조자' in temptext.strip()) or ('첩조자' in temptext.strip()  ) 
-           or  ('혐조자' in temptext.strip()) ):
+           or ('현조자' in temptext.strip()) ):
             _indexOfBC=len(TextList)
             temptext=(temptext.replace('협조자',"")
-                      .replace('협소자',"").replace('현조자',"").strip() 
-                      .replace('첩조자',"").strip().replace('혐조자',"").strip()  )
+                      .replace('협소자',"").replace('현조자',"").strip()  )
             print(i,"-------****-------------------***")
             
         
@@ -164,7 +160,7 @@ boxandtext= pd.DataFrame(LocationList,columns=["x1","y1","x2","y2"])
 boxandtext["text"]=TextList
     
 # "remove lines below the benchmark "
-val=LocationList[_indexOfBC][1] + 0
+val=LocationList[_indexOfBC][1] +60
 boxandtext2=boxandtext[boxandtext.y1 <val ]
 
 
