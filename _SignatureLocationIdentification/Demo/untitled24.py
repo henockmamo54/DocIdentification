@@ -14,7 +14,7 @@ import pytesseract
 from scipy.spatial import distance 
 from os import walk
 
-_, _, filenames = next(walk("image/notnormal"))
+_, _, filenames = next(walk("image/normal"))
 
 for file in filenames:        
     print(file)    
@@ -24,7 +24,7 @@ for file in filenames:
     
     # frame = cv2.imread('TestImages/ct2.png') 
     # frame = cv2.imread('tempimage/1 (19).jpg') 
-    frame = cv2.imread('image/notnormal/'+file) 
+    frame = cv2.imread('image/normal/'+file) 
     
     # frame=cv2.imread("sample.jpg")
     frame_original=frame 
@@ -107,7 +107,7 @@ for file in filenames:
     padding=10
     temptext=""
     
-    8
+    
     TextList=[]
     LocationList=[]
     _indexOfBC=-1
@@ -122,26 +122,28 @@ for file in filenames:
         # temptext+=''.join([i for i in currentBox[0].strip() if i.isalpha()])
         temptext+=''.join([i for i in currentBox[0].strip() if not i.isdigit()])
         
-        #clean up
-        temptext=(temptext.replace("대결","").replace("전결","").replace("/","")
-                  .replace(".","").replace("결","").replace("전","").replace("/","").replace("_","")
-                  .replace("팀" ,"").replace("저거" ,"").replace("골","")) 
-        
+         #clean up
+        temptext=(temptext.replace("대결","").replace("전결","").replace("/","").replace("_","")
+                  .replace(".","").replace("결","").replace("전","").replace("-","").replace("”","")
+                  .replace("저거" ,"").replace("골","").replace("ㆍ","").replace("고스","")
+                  .replace("저그","").replace("보","").replace("장","")
+                  ) #.replace("팀" ,"").replace("처","").replace("과","")
          
         diff=(int(nextBox[1]) - int(currentBox[3])) 
          
-        if( ( abs(diff)>50   ) and( (abs(diff) < 0.9*w)) and 
+        if( ( abs(diff) > 50   ) and( (abs(diff) < 0.9*w)) and 
            (nextBox[1]>currentBox[3] or nextBox[3] < currentBox[1]) # to check if the two boxes are not overlaping
            ):    
              
-             # locate the benchmark text
+            # locate the benchmark text
             if(('협조자' in temptext.strip())  or ('협소자' in temptext.strip())
                or ('현조자' in temptext.strip()) or ('첩조자' in temptext.strip()  ) 
                or  ('혐조자' in temptext.strip()) ):
                 _indexOfBC=len(TextList)
                 temptext=(temptext.replace('협조자',"")
                           .replace('협소자',"").replace('현조자',"").strip() 
-                          .replace('첩조자',"").strip().replace('혐조자',"").strip()  )
+                          .replace('첩조자',"").strip().replace('혐조자',"").strip() 
+                          )
                 print(i,"-------****-------------------***")
                 
                 
@@ -281,9 +283,9 @@ for file in filenames:
     # cv2.destroyAllWindows() 
     
     if(isnormal):
-        cv2.imwrite('cropped/notnormal/normal/'+file,crop_img)
+        cv2.imwrite('cropped/normal/normal/'+file,crop_img)
     else:
-        cv2.imwrite('cropped/notnormal/notnormal/'+file,crop_img)
+        cv2.imwrite('cropped/normal/notnormal/'+file,crop_img)
         
     
 
