@@ -11,7 +11,7 @@ import pytesseract
 import pandas as pd
 import re
 
-image = cv2.imread('image/normal/1 (1).jpg')  
+image = cv2.imread('image/normal/1 (24).jpg')  
 frame_original=image  
  
 scale_percent = 500/image.shape[0] # percent of original size
@@ -45,12 +45,17 @@ mask = np.ones(image.shape[:2], dtype="uint8") * 255
 
 stamps=[]
 
+image_withstampLocator = frame_original;
+
 for c in contours:
     # get the bounding rect
     x, y, w, h = cv2.boundingRect(c)
     if w*h>1000:
     # if w>width*0.6 and h<10 and h>1 :
         cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -2)
+        image_withstampLocator=cv2.rectangle(image_withstampLocator, (int(x/scale_percent), int(y/scale_percent)), 
+                      
+                      (int((x+w)/scale_percent), int( (y+h)/scale_percent ) ), (120, 255, 0), 10)
         print(w*h)
         
         crop_img = image[y:y+h, 0:x+w]     
@@ -67,6 +72,8 @@ for c in contours:
         stamps.append(crop_img)
 
 print ("******************************************************* \n      Stamp count = ",len(stamps))
+
+
 
 # res_final = cv2.bitwise_and(image, image, mask=cv2.bitwise_not(mask)) 
 # cv2.imshow("image", image)
@@ -144,7 +151,10 @@ if(len(stamps)==1):
     #==================================================================================
     
     
-    details = pytesseract.image_to_data(frame_original, output_type=pytesseract.Output.DICT, config=custom_config, lang="kor")
+    # header_image1 = frame_original[0:frame_original.shape[1],0:int(frame_original.shape[0]/4),]
+    header_image = frame_original[0:int(frame_original.shape[0]/4),:,]
+    
+    details = pytesseract.image_to_data(header_image, output_type=pytesseract.Output.DICT, config=custom_config, lang="kor")
     temp= pd.DataFrame(details)
     
     temp=temp.query(" (line_num <= 3)  ").reset_index()
@@ -161,18 +171,26 @@ if(len(stamps)==1):
     
     
     padding=50
-    header_image =frame_original[np.min(temp.top) -padding :np.max(temp.top) + np.max(temp.height)+padding,   
-                                 np.min(temp.left)-padding:np.max(temp.left)  + np.max(temp.width) +padding]
+    # header_image =frame_original[np.min(temp.top) -padding :np.max(temp.top) + np.max(temp.height)+padding,   
+    #                              np.min(temp.left)-padding:np.max(temp.left)  + np.max(temp.width) +padding]
     # header_image=frame_original [0 :np.max(temp.top),   0:np.max(temp.left)  ]  
     # header_image=frame_original[0:500,0:200]
+
+        
+    header_image = cv2.rectangle(header_image, (np.min(temp.left),np.min(temp.top) ), 
+                                 ( np.max(temp.left)+np.max(temp.width)   , np.max(temp.top)+np.max(temp.height)), (120, 255, 0), 10)
+    
+    image_withstampLocator=cv2.rectangle(image_withstampLocator, (np.min(temp.left),np.min(temp.top) ), 
+                                 ( np.max(temp.left)+np.max(temp.width)   , np.max(temp.top)+np.max(temp.height)), (120, 255, 0), 10)
     
     width = int(header_image.shape[1] * 0.2 )
     height = int(header_image.shape[0] * 0.2 )
     dim = (width, height)
-       
+           
     cv2.imshow("header_image", cv2.resize(header_image, dim, interpolation = cv2.INTER_AREA))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    
     
     #==================================================================================
     #==================================================================================
@@ -193,6 +211,10 @@ if(len(stamps)==1):
     print(header_text, "\n" ,text2)
     print(fuzz.token_set_ratio(header_text, text2))
 
+#==================================================================================
+#==================================================================================
+
+cv2.imwrite('image_withstampLocator.png',image_withstampLocator)
 
 
 

@@ -14,7 +14,7 @@ import pytesseract
 from scipy.spatial import distance 
 from os import walk
 
-_, _, filenames = next(walk("image/normal"))
+_, _, filenames = next(walk("image/notnormal"))
 
 for file in filenames:        
     print(file)    
@@ -24,7 +24,7 @@ for file in filenames:
     
     # frame = cv2.imread('TestImages/ct2.png') 
     # frame = cv2.imread('tempimage/1 (19).jpg') 
-    frame = cv2.imread('image/normal/'+file) 
+    frame = cv2.imread('image/notnormal/'+file) 
     
     # frame=cv2.imread("sample.jpg")
     frame_original=frame 
@@ -283,9 +283,9 @@ for file in filenames:
     # cv2.destroyAllWindows() 
     
     if(isnormal):
-        cv2.imwrite('cropped/normal/normal/'+file,crop_img)
+        cv2.imwrite('cropped/notnormal/normal/'+file,crop_img)
     else:
-        cv2.imwrite('cropped/normal/notnormal/'+file,crop_img)
+        cv2.imwrite('cropped/notnormal/notnormal/'+file,crop_img)
         
     
 
