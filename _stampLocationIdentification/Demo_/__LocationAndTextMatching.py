@@ -11,7 +11,10 @@ import pytesseract
 import pandas as pd
 import re
 
-image = cv2.imread('image/normal/1 (24).jpg')  
+stamps=[]
+stringmatches=False
+
+image = cv2.imread('image/normal/1 (3).jpg')  
 frame_original=image  
  
 scale_percent = 500/image.shape[0] # percent of original size
@@ -43,7 +46,6 @@ thresh=thresh_inv= cv2.blur(thresh_inv,(3,3))
 contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
 mask = np.ones(image.shape[:2], dtype="uint8") * 255
 
-stamps=[]
 
 image_withstampLocator = frame_original;
 
@@ -92,12 +94,19 @@ if(len(stamps)==1):
     #==================================================================================
     #==================================================================================
     
+    
+    crop_img=cv2.cvtColor(crop_img,cv2.COLOR_BGR2GRAY)
+    rect,crop_img = cv2.threshold(crop_img,0,255,cv2.THRESH_BINARY )
+    kernel = np.ones((7,7),np.uint8)
+    crop_img = cv2.erode(crop_img, kernel, iterations = 1) 
+    
     #configuring parameters for tesseract
     custom_config = r'--oem 3 --psm 6  ' #-ctessedit_char_blacklist= 0123456789
     
     # chekc the text next to stamp
     text = pytesseract.image_to_string(crop_img, lang = 'kor', config=custom_config).strip() 
     text=re.sub('[A-Za-z0-9]+', '', text) 
+    
     
     
     # now feeding image to tesseract
@@ -152,12 +161,20 @@ if(len(stamps)==1):
     
     
     # header_image1 = frame_original[0:frame_original.shape[1],0:int(frame_original.shape[0]/4),]
-    header_image = frame_original[0:int(frame_original.shape[0]/4),:,]
+    header_image = frame_original[0:int(frame_original.shape[0]/5),:,]
+    
+    
+    header_image=cv2.cvtColor(header_image,cv2.COLOR_BGR2GRAY)
+    rect,header_image = cv2.threshold(header_image,0,255,cv2.THRESH_BINARY)
+    kernel = np.ones((5,5),np.uint8)
+    header_image = cv2.erode(header_image, kernel, iterations = 1) 
+    # header_image=cv2.dilate(header_image,kernel,iterations = 1)
+    
     
     details = pytesseract.image_to_data(header_image, output_type=pytesseract.Output.DICT, config=custom_config, lang="kor")
     temp= pd.DataFrame(details)
     
-    temp=temp.query(" (line_num <= 3)  ").reset_index()
+    temp=temp.query(" (line_num <= 2)  ").reset_index()
     temp["test_len"] = 0
     for i in range(temp.shape[0]):
         # temp.iloc[i,-1]=len(temp.text[i])  
@@ -181,7 +198,7 @@ if(len(stamps)==1):
                                  ( np.max(temp.left)+np.max(temp.width)   , np.max(temp.top)+np.max(temp.height)), (120, 255, 0), 10)
     
     image_withstampLocator=cv2.rectangle(image_withstampLocator, (np.min(temp.left),np.min(temp.top) ), 
-                                 ( np.max(temp.left)+np.max(temp.width)   , np.max(temp.top)+np.max(temp.height)), (120, 255, 0), 10)
+                                  ( np.max(temp.left)+np.max(temp.width)   , np.max(temp.top)+np.max(temp.height)), (120, 255, 0), 10)
     
     width = int(header_image.shape[1] * 0.2 )
     height = int(header_image.shape[0] * 0.2 )
@@ -210,11 +227,18 @@ if(len(stamps)==1):
     from fuzzywuzzy import fuzz
     print(header_text, "\n" ,text2)
     print(fuzz.token_set_ratio(header_text, text2))
+    
+    stringmatches= (fuzz.token_set_ratio(header_text, text2)>0)
 
 #==================================================================================
 #==================================================================================
 
 cv2.imwrite('image_withstampLocator.png',image_withstampLocator)
+
+if(len(stamps)>0 and stringmatches):
+    print("--------------> normal")
+else:
+    print("--------------> not normal")
 
 
 
