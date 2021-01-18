@@ -14,7 +14,7 @@ from os import walk
 import re
 
 
-_, _, filenames = next(walk("image/notnormal"))
+_, _, filenames = next(walk("image/normal"))
 
 for file in filenames:        
     print(file)  
@@ -22,7 +22,7 @@ for file in filenames:
     stamps=[]
     stringmatches=False
     
-    image = cv2.imread('image/notnormal/'+file)  
+    image = cv2.imread('image/normal/'+file)  
     frame_original=image  
      
     scale_percent = 500/image.shape[0] # percent of original size
@@ -169,22 +169,30 @@ for file in filenames:
         #==================================================================================
         
         
+        frame_original=cv2.imread('image/normal/'+file)
+        #configuring parameters for tesseract
+        custom_config = r'--oem 3 --psm 6  ' #-ctessedit_char_blacklist= 0123456789
+        
         # header_image1 = frame_original[0:frame_original.shape[1],0:int(frame_original.shape[0]/4),]
-        header_image = frame_original[0:int(frame_original.shape[0]/5),:,]
+        header_image = frame_original[0:int(frame_original.shape[0]/5.5),:,]
         
         
         header_image=cv2.cvtColor(header_image,cv2.COLOR_BGR2GRAY)
         rect,header_image = cv2.threshold(header_image,0,255,cv2.THRESH_BINARY)
-        kernel = np.ones((7,7),np.uint8)
-        header_image = cv2.erode(header_image, kernel, iterations = 1) 
+        kernel = np.ones((3,3),np.uint8)
+        header_image=cv2.morphologyEx(header_image, cv2.MORPH_OPEN, kernel)
+        header_image = cv2.dilate(header_image, np.ones((5,5),np.uint8), iterations = 1)
+        rect,header_image = cv2.threshold(header_image,0,255,cv2.THRESH_BINARY)
+        header_image = cv2.erode(header_image, np.ones((9,9),np.uint8), iterations = 1)
         
-    
+        
+        # header_image=cv2.dilate(header_image,kernel,iterations = 1)
         
         
         details = pytesseract.image_to_data(header_image, output_type=pytesseract.Output.DICT, config=custom_config, lang="kor")
         temp= pd.DataFrame(details)
         
-        temp=temp.query(" (line_num <= 3)  ").reset_index()
+        temp=temp.query(" (line_num <= 2)  ").reset_index()
         temp["test_len"] = 0
         for i in range(temp.shape[0]):
             # temp.iloc[i,-1]=len(temp.text[i])  
@@ -192,17 +200,13 @@ for file in filenames:
             
         temp= temp[temp.test_len>0]  
         temp= temp[temp.conf>30]
+        temp= temp[temp.height>100]
         
         header_text="".join(temp.text).strip()
         header_text=re.sub('[A-Za-z0-9]+', '', header_text)
         
         
         padding=50
-        # header_image =frame_original[np.min(temp.top) -padding :np.max(temp.top) + np.max(temp.height)+padding,   
-        #                              np.min(temp.left)-padding:np.max(temp.left)  + np.max(temp.width) +padding]
-        # header_image=frame_original [0 :np.max(temp.top),   0:np.max(temp.left)  ]  
-        # header_image=frame_original[0:500,0:200]
-    
             
         header_image = cv2.rectangle(header_image, (np.min(temp.left),np.min(temp.top) ), 
                                      ( np.max(temp.left)+np.max(temp.width)   , np.max(temp.top)+np.max(temp.height)), (120, 255, 0), 10)
@@ -246,7 +250,7 @@ for file in filenames:
     
     if(len(stamps)>0 and stringmatches):
         print("--------------> normal")
-        cv2.imwrite('result/normal/notnormal/'+file,image_withstampLocator)
+        cv2.imwrite('result/normal/normal/'+file,image_withstampLocator)
     else:
         print("--------------> not normal")        
         cv2.imwrite('result/normal/notnormal/'+file,image_withstampLocator)
