@@ -12,7 +12,7 @@ import cv2
 import imutils
  
 # frame = cv2.imread('TestImages/ct2.png') 
-frame = cv2.imread('../TrainTestData/Train/Normal/1 (65).jpg')  
+frame = cv2.imread('../TrainTestData/Train/Normal/1 (43).jpg')  
 frame_original=frame 
 
 #resize image  500,353
