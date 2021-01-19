@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 19 15:12:55 2021
+Created on Tue Jan 19 20:56:51 2021
 
 @author: Henock
 """
+ 
  
 import cv2 
 import numpy as np 
@@ -12,8 +13,11 @@ import pandas as pd
 import re
 from scipy.spatial import distance 
   
-image = cv2.imread('image/normal/1 (79).jpg') 
+image = cv2.imread('image/normal/1 (2).jpg') 
+image= cv2.resize(image, (4134,5846), interpolation = cv2.INTER_CUBIC) 
 frame_original=image  
+
+print("******* size", image.shape)
  
 # resize image
 scale_percent = 900/image.shape[0] # percent of original size
@@ -79,12 +83,14 @@ else:
     print("horizontal bar found")
     imagebelowthebar= cv2.cvtColor(frame_original,cv2.COLOR_BGR2GRAY)[horizontalbars[0][1]:,] 
     
-    # rect,imagebelowthebar = cv2.threshold(imagebelowthebar,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     rect,imagebelowthebar = cv2.threshold(imagebelowthebar,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    kernel = np.ones((5,5),np.uint8) 
-    # imagebelowthebar = cv2.dilate(imagebelowthebar, np.ones((2,2),np.uint8), iterations = 1)
+    # rect,imagebelowthebar = cv2.threshold(imagebelowthebar,0,255,cv2.THRESH_BINARY)
+    # kernel = np.ones((3,3),np.uint8) 
     imagebelowthebar = cv2.erode(imagebelowthebar, np.ones((5,5),np.uint8), iterations = 1)
-    # imagebelowthebar = cv2.morphologyEx(imagebelowthebar, cv2.MORPH_OPEN, kernel) 
+    # imagebelowthebar = cv2.dilate(imagebelowthebar, np.ones((3,3),np.uint8), iterations = 1)
+    # imagebelowthebar = cv2.dilate(imagebelowthebar, np.ones((5,5),np.uint8), iterations = 1)  
+    # imagebelowthebar = cv2.morphologyEx(imagebelowthebar, cv2.MORPH_OPEN, kernel, iterations = 2) 
+    # imagebelowthebar = cv2.erode(imagebelowthebar, np.ones((5,5),np.uint8), iterations = 1)
 
 
     
@@ -147,7 +153,9 @@ else:
                    .replace("|","").replace(",","")  
                   )  
         
-        temp_text=(temp_text.replace("전결","").replace("대결","")                   
+        temp_text=(temp_text.replace("전결","").replace("대결","") 
+                   .replace("결","").replace("전","").replace("어우","").replace("의이","")
+                   .replace("장의","").replace("장","").replace("은의","")
                   )  
     
         
@@ -155,25 +163,29 @@ else:
             
             if(len(temp_text)>0):  
                 
+                
+                if(('협조자' in temp_text) or ("렵조자" in temp_text ) or ('현조자' in temp_text) or 
+                   ('첩조자' in temp_text  )  or  ('혐조자' in temp_text) or  ('협소사' in temp_text)
+                    or  ('협조사' in temp_text)or  ('엽소사' in temp_text)):
+                    
+                    indexOfBC=len(LocationList)
+                    temp_text= (temp_text.replace("협조자","").replace("렵조자","")
+                    .replace("현조자","").replace("혐조자","").replace("협소사","")
+                    .replace("협조사","").replace("첩조자","").replace("엽소사","")).strip()
+                
                 TextList.append(temp_text)
                 LocationList.append(
                     (boxes_array.x1[previous_index]-padding, padding+boxes_array.y1[previous_index],
                      padding+boxes_array.x2[i],boxes_array.y2[i] - padding)
                     
                     )
-                
-                if(('협조자' in temp_text) or ("렵조자" in temp_text ) or ('현조자' in temp_text) or 
-                   ('첩조자' in temp_text  )  or  ('혐조자' in temp_text)):
                     
-                    indexOfBC=len(LocationList)-1
-                    temp_text= (temp_text.replace("협조자","").replace("렵조자","")
-                    .replace("현조자","").replace("혐조자","") )
                     
                 
                   
                 # print("test ",temp_text)
                 # imagebelowthebar=cv2.rectangle(imagebelowthebar, (boxes_array.x1[previous_index]-padding, padding+boxes_array.y1[previous_index]), 
-                #                            (padding+boxes_array.x2[i],boxes_array.y2[i] - padding), (0, 0, 255), 5)
+                #                             (padding+boxes_array.x2[i],boxes_array.y2[i] - padding), (0, 0, 255), 5)
             previous_index=i+1
             temp_text=""
             
@@ -191,7 +203,7 @@ else:
     boxandtext["text"]=TextList
         
     # "remove lines below the benchmark "
-    val=LocationList[indexOfBC][1]
+    val=LocationList[indexOfBC][1]+30
     boxandtext=boxandtext[boxandtext.y1 <val ]    
     boxandtext=boxandtext.query("text != ''") 
     
@@ -205,8 +217,8 @@ else:
 
 
 
-    #============================================================
-    #============================================================
+    # #============================================================
+    # #============================================================
      
     
     indexes=list(np.arange(boxandtext.shape[0]))
@@ -227,8 +239,8 @@ else:
                 
                 # for i in range(boxandtext2.shape[0]):
                 for i in indexes:
-                    a=(boxandtext.x2[j], boxandtext.y1[j])
-                    b=(boxandtext.x1[i], boxandtext.y1[i])            
+                    a=(boxandtext.x2[j], boxandtext.y2[j])
+                    b=(boxandtext.x1[i], boxandtext.y2[i])            
                     
                     
                     if(i==j):
@@ -248,7 +260,7 @@ else:
                 verticaldist= abs (boxandtext.y2[closest] - boxandtext.y1[j])
                 # print("horizontaldist  ==> ",abs(horizontaldist),horizontaldist<450)
                 
-                if(horizontaldist<450 and verticaldist < 130  ):
+                if(horizontaldist<450   ):
                     
                     
                     imagebelowthebar=cv2.arrowedLine(imagebelowthebar,
@@ -268,6 +280,7 @@ else:
         
         
                     indexes.remove(j)
+                    # (print(str(j)+" is removed "+"-------- >", indexes))
                     indexes.remove(closest)
                      
                     # print(indexes, " removed ", j, closest)
