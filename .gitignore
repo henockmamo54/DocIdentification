@@ -926,3 +926,4 @@ top_model_weights_path.data-00000-of-00001
 topmodel/variables/variables.data-00000-of-00001
 CNN Test/topmodel/variables/variables.data-00000-of-00001
 _SignatureLocationIdentification/east/frozen_east_text_detection.pb
+_SignatureLocationIdentification/trial/east/frozen_east_text_detection.pb
